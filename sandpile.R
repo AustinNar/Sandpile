@@ -4,8 +4,6 @@ library(caTools)
 library(RColorBrewer)
 library(twitteR)
 
-setwd('C:/Users/naaar/Dropbox/Other/Sandpile/')
-
 sourceCpp('topple.cpp')
 
 # Just makes each cell of a matrix px*px cell wide, for expanding resolution of an image
@@ -40,13 +38,14 @@ m = matrix(integer(cells^2), nrow = cells)
 # Number of sandgrains that should fill page without overflowing too much
 total = 2.1*cells^2*pi
 
-# Just some hyperparameters 
+# Just some hyperparameters for our random initial state
 sd = cells/3
 alpha = sample(x = 1:10, size = 1, prob = 1/(1:10)^2 / sum(1/(1:10)^2))
 beta = sqrt(alpha) / sd
 
+# We sample the radius from the center with a gamma, the angle with a uniform,
+# and the number of grains placed in cell with a poisson
 lambda = sample(round(total/4/12):round(total/4/2), 1)
-
 while(sum(m) < total / 4){
   r = rgamma(1,alpha, rate = beta)
   theta = runif(1)*pi/2
@@ -58,22 +57,22 @@ while(sum(m) < total / 4){
   }
 }
 
+# Use snowlake so initial state has some symmetry
 m = snowflake(m)
 
-
+# We call parallelTopple to do the work
 while(max(m > 3)){
   m = parallelTopple(m)
 }
 
+# All aesthetic stuff and saving to a .gif file
 color = sample(c('Reds', 'Blues', 'Purples'), 1)
-
 palette = c(RColorBrewer::brewer.pal(4, color), rep('#000000', 252))
-
 filename = paste0(gsub(pattern = '[- :]', replacement = '', as.character(Sys.time())), '.gif')
-
 write.gif(expand(m, 2), filename = filename, col = palette)
 
+# Setup oauth and tweet picture
 oauth = yaml::yaml.load_file('twitter.yaml')
 setup_twitter_oauth(oauth$consumer_key, oauth$consumer_secret, oauth$access_token, oauth$access_secret)
-
+1
 updateStatus(text = '', mediaPath = filename)
