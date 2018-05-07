@@ -36,7 +36,7 @@ cells = 2^8
 m = matrix(integer(cells^2), nrow = cells)
 
 # Number of sandgrains that should fill page without overflowing too much
-total = 2.1*cells^2*pi
+total = 2*cells^2*pi
 
 # Just some hyperparameters for our random initial state
 sd = cells/3
